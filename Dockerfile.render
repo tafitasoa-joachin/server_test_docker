@@ -34,10 +34,9 @@ WORKDIR /var/www/symfony
 # Création du répertoire pour supervisor
 RUN mkdir -p /etc/supervisor/conf.d
 
-# Création d'un utilisateur non-root avec des valeurs fixes
-# En Alpine Linux, nous utilisons addgroup/adduser au lieu de groupadd/useradd
-RUN addgroup -g 1000 symfony && \
-    adduser -u 1000 -G symfony -s /bin/sh -D symfony && \
+# Création d'un utilisateur non-root simple (sans spécifier UID/GID)
+RUN addgroup symfony && \
+    adduser -G symfony -s /bin/sh -D symfony && \
     mkdir -p /var/www/symfony/var && \
     mkdir -p /var/www/symfony/vendor && \
     chown -R symfony:symfony /var/www/symfony

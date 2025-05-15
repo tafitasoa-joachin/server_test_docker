@@ -1,10 +1,5 @@
 FROM php:8.2-fpm
 
-# Arguments définis dans docker-compose.yml
-ARG USER
-ARG USER_ID
-ARG GROUP_ID
-
 # Installation des dépendances
 RUN apt-get update && apt-get install -y \
     git \
@@ -35,43 +30,22 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le répertoire de travail
 WORKDIR /var/www/symfony
 
-# Création d'un utilisateur non-root pour exécuter l'application
-RUN groupadd -g ${GROUP_ID} ${USER} \
-    && useradd -u ${USER_ID} -g ${USER} -s /bin/bash ${USER}
+# Copie de l'application
+COPY . /var/www/symfony
 
-# Copie des fichiers composer avant l'installation des dépendances
-COPY --chown=${USER}:${USER} composer.json composer.lock symfony.lock ./
-
-# Copie de la configuration PHP pour la production
-COPY --chown=${USER}:${USER} docker/php/symfony.ini /usr/local/etc/php/conf.d/symfony.ini
-
-# Configuration des permissions
-RUN mkdir -p var/cache var/log vendor \
-    && chown -R ${USER}:${USER} var vendor
-
-# Passage à l'utilisateur non-root
-USER ${USER}
+# Configuration PHP pour la production
+COPY docker/php/symfony.ini /usr/local/etc/php/conf.d/symfony.ini
 
 # Installation des dépendances via Composer
-RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction
+RUN composer install --optimize-autoloader --no-dev
 
-# Copie du reste de l'application après l'installation des dépendances
-USER root
-COPY --chown=${USER}:${USER} . .
-USER ${USER}
+# Environnement de production
+ENV APP_ENV=prod
 
-# Exécution des scripts Composer et optimisation pour la production
-RUN composer dump-autoload --optimize \
-    && composer run-script post-install-cmd \
-    && php bin/console cache:clear --no-warmup \
-    && php bin/console cache:warmup
-
-# Nettoyage pour la production
-RUN if [ "$APP_ENV" = "prod" ]; then \
-    composer install --prefer-dist --no-dev --no-scripts --no-progress --no-interaction; \
-    composer dump-autoload --optimize --no-dev --classmap-authoritative; \
-    php bin/console cache:clear --env=prod --no-debug; \
-    fi
+# Optimisation pour la production
+RUN php bin/console cache:clear --env=prod \
+    && php bin/console cache:warmup --env=prod \
+    && php bin/console assets:install public --env=prod
 
 # Exposition du port pour PHP-FPM
 EXPOSE 9000

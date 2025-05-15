@@ -8,9 +8,7 @@ RUN apk add --no-cache \
     icu-dev \
     libpng-dev \
     oniguruma-dev \
-    libxml2-dev \
-    nginx \
-    supervisor
+    libxml2-dev
 
 # Installation des extensions PHP
 RUN docker-php-ext-install \
@@ -28,48 +26,36 @@ RUN docker-php-ext-install \
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Définition du répertoire de travail
+# Définir le répertoire de travail
 WORKDIR /var/www/symfony
 
-# Création du répertoire pour supervisor
-RUN mkdir -p /etc/supervisor/conf.d
+# Copier les fichiers du projet
+COPY . .
 
-# Création d'un utilisateur non-root simple
-RUN addgroup symfony && \
-    adduser -G symfony -s /bin/sh -D symfony && \
-    mkdir -p /var/www/symfony/var && \
-    mkdir -p /var/www/symfony/vendor && \
-    chown -R symfony:symfony /var/www/symfony
+# Installation des dépendances
+RUN composer install --optimize-autoloader --no-dev
 
-# Création des répertoires pour les logs
-RUN mkdir -p /var/log/nginx \
-    && mkdir -p /var/log/supervisor \
-    && chown -R symfony:symfony /var/log/nginx \
-    && chown -R symfony:symfony /var/log/supervisor
-
-# Copie des fichiers de configuration 
-COPY docker/render/nginx.conf /etc/nginx/nginx.conf
-COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copie des fichiers du projet
-COPY --chown=symfony:symfony . .
-
-# Installation des dépendances en tant qu'utilisateur symfony
-USER symfony
-RUN composer install --optimize-autoloader --no-dev --no-scripts
+# Configuration de l'environnement
+ENV APP_ENV=prod
+ENV APP_DEBUG=0
 
 # Optimisation pour la production
 RUN php bin/console cache:clear --env=prod \
     && php bin/console cache:warmup --env=prod \
     && php bin/console assets:install public --env=prod
 
-# Retour à l'utilisateur root pour la configuration finale
-USER root
+# Configuration pour Render
+COPY docker/render/nginx.conf /etc/nginx/nginx.conf
+COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 
-# S'assurer que les permissions sont correctes pour les fichiers sensibles
-RUN chmod -R 777 /var/www/symfony/var
+# Installation de Nginx et Supervisor
+RUN apk add --no-cache nginx supervisor
 
-# Exposition du port utilisé par Render
+# Création du répertoire pour les logs
+RUN mkdir -p /var/log/nginx && \
+    mkdir -p /var/log/supervisor
+
+# Exposition du port
 EXPOSE 8080
 
 # Commande de démarrage

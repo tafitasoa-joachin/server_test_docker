@@ -29,8 +29,18 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le répertoire de travail
 WORKDIR /var/www/symfony
 
+# Création d'un utilisateur non-root avec des valeurs fixes
+RUN addgroup -g 1000 symfony && \
+    adduser -u 1000 -G symfony -s /bin/sh -D symfony
+
 # Copier les fichiers du projet
 COPY . .
+
+# Configuration du propriétaire des fichiers
+RUN chown -R symfony:symfony /var/www/symfony
+
+# Passage à l'utilisateur non-root
+USER symfony
 
 # Installation des dépendances
 RUN composer install --optimize-autoloader --no-dev
@@ -47,6 +57,9 @@ RUN php bin/console cache:clear --env=prod \
 # Configuration pour Render
 COPY docker/render/nginx.conf /etc/nginx/nginx.conf
 COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Revenir à l'utilisateur root pour les dernières installations
+USER root
 
 # Installation de Nginx et Supervisor
 RUN apk add --no-cache nginx supervisor

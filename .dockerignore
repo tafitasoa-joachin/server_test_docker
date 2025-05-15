@@ -1,0 +1,23 @@
+# Répertoires à ignorer
+/vendor/
+/node_modules/
+/var/
+/.git/
+/.github/
+/.idea/
+/.vscode/
+# Fichiers à ignorer
+.env.local
+.env.*.local
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
+.DS_Store
+# Fichiers volumineux
+*.zip
+*.tar
+*.gz
+*.rar
+*.mp4
+*.mp3
+*.pdf

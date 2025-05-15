@@ -1,7 +1,7 @@
 # Ce script facilite le déploiement de votre application Symfony sur Render
 
 # Variables d'environnement
-export DATABASE_URL="mysql://user:password@external-db.render.com:3306/database_name"
+export DATABASE_URL="mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0"
 export APP_ENV="prod"
 export APP_SECRET="your-app-secret"
 

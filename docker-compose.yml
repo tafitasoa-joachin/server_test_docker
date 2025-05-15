@@ -11,6 +11,13 @@ services:
     volumes:
       - ./:/var/www/symfony
       - ./vendor:/var/www/symfony/vendor:delegated
+
+    healthcheck:
+      test: [ "CMD", "ping", "-h", "localhost" ]
+      timeout: 20s
+      interval: 10s
+      retries: 10
+
     environment:
       - APP_ENV=${APP_ENV:-prod}
       - DATABASE_URL=mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0

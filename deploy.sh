@@ -26,23 +26,32 @@ php bin/console assets:install public --env=prod
 # yarn install
 # yarn encore production
 
-# Vérifier que Nginx fonctionne
-if ! ps aux | grep -q "[n]ginx"; then
-    echo "Nginx ne fonctionne pas"
+# Vérifier que Nginx et PHP-FPM sont correctement démarrés
+echo "Vérification des services..."
+
+# Attendez quelques secondes pour que les services démarrent complètement
+sleep 5
+
+# Vérifier si Nginx est en cours d'exécution
+if ! pgrep -x "nginx" > /dev/null; then
+    echo "ERREUR: Nginx n'est pas en cours d'exécution"
     exit 1
 fi
 
-# Vérifier que PHP-FPM fonctionne
-if ! ps aux | grep -q "[p]hp-fpm"; then
-    echo "PHP-FPM ne fonctionne pas"
+# Vérifier si PHP-FPM est en cours d'exécution
+if ! pgrep -x "php-fpm" > /dev/null; then
+    echo "ERREUR: PHP-FPM n'est pas en cours d'exécution"
     exit 1
 fi
 
-# Vérifier que le port 8080 est en écoute
-if ! netstat -tulpn | grep -q ":8080"; then
-    echo "Port 8080 non ouvert"
+# Vérifier si le port 80 est en écoute
+if ! netstat -tuln | grep -q ":80 "; then
+    echo "ERREUR: Le port 80 n'est pas ouvert"
+    # Affichage des ports en écoute pour le débogage
+    echo "Ports en écoute:"
+    netstat -tuln
     exit 1
 fi
 
-echo "Application prête pour le déploiement!"
+echo "Application déployée avec succès! Tous les services sont opérationnels."
 exit 0

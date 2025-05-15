@@ -51,6 +51,7 @@ RUN php bin/console cache:clear --env=prod \
     && php bin/console assets:install public --env=prod
 
 # Exposition du port pour PHP-FPM
-EXPOSE 9000
+EXPOSE 80 
+# EXPOSE 9000
 
 CMD ["php-fpm"]

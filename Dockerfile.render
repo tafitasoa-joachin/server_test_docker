@@ -64,11 +64,12 @@ COPY healthcheck.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh
 
 # S'assurer que les permissions sont correctes
+RUN chown -R www-data:www-data /var/www/project/var
 RUN chown -R www-data:www-data /var/www/symfony
 RUN chmod -R 755 /var/www/symfony/var
 
 # Exposition du port
-EXPOSE 8080
+EXPOSE 80
 
 # Commande de démarrage
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf", "/deploy.sh"]

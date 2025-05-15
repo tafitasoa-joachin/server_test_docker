@@ -68,8 +68,13 @@ COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chown -R www-data:www-data /var/www/symfony/var
 RUN chmod -R 755 /var/www/symfony/var
 
+# Copier le script entrypoint et le rendre exécutable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Exposition du port 80 - IMPORTANT POUR RENDER
 EXPOSE 80
 
-# Commande de démarrage avec Supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Utiliser entrypoint.sh comme point d'entrée
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["php-fpm"]

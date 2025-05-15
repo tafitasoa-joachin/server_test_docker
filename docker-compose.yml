@@ -4,10 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        USER: symfony
-        USER_ID: 1000
-        GROUP_ID: 1000
+      # args:
+      #   USER: symfony
+      #   USER_ID: 1000
+      #   GROUP_ID: 1000
     volumes:
       - ./:/var/www/symfony
       - ./vendor:/var/www/symfony/vendor:delegated

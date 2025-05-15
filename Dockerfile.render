@@ -29,6 +29,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le répertoire de travail
 WORKDIR /var/www/symfony
 
+# Autoriser Composer à s'exécuter en tant que root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Copier les fichiers du projet
 COPY . .
 

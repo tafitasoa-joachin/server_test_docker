@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Ce script facilite le déploiement de votre application Symfony sur Render
 
 # Variables d'environnement
@@ -5,10 +7,12 @@ export DATABASE_URL="mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux
 export APP_ENV="prod"
 export APP_SECRET="your-app-secret"
 
-# Mise à jour des dépendances
-composer install --no-dev --optimize-autoloader
+export COMPOSER_MEMORY_LIMIT=-1
 
-# Nettoyage et réchauffeage du cache
+# Mise à jour des dépendances - Suppression de l'option --no-dev
+composer install --optimize-autoloader
+
+# Nettoyage et réchauffage du cache
 php bin/console cache:clear --env=prod
 php bin/console cache:warmup --env=prod
 

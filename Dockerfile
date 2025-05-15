@@ -30,6 +30,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le répertoire de travail
 WORKDIR /var/www/symfony
 
+# Autoriser Composer à s'exécuter en tant que root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Copie de l'application
 COPY . /var/www/symfony
 
@@ -37,7 +40,7 @@ COPY . /var/www/symfony
 COPY docker/php/symfony.ini /usr/local/etc/php/conf.d/symfony.ini
 
 # Installation des dépendances via Composer
-RUN composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader
 
 # Environnement de production
 ENV APP_ENV=prod

@@ -1,6 +1,8 @@
+
 services:
   - type: web
     name: symfony-app
+    plan: free  # Ou choisissez le plan qui convient
     env: docker
     dockerfilePath: ./Dockerfile.render
     envVars:

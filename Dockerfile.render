@@ -1,4 +1,3 @@
-
 FROM php:8.2-apache
 
 # Installer les dépendances et extensions PHP
@@ -28,7 +27,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 # Configuration du répertoire de travail
 WORKDIR /var/www/html
 
-# Copie du code source
+# Copie du code source 
 COPY . .
 
 # Installation des dépendances
@@ -54,12 +53,8 @@ RUN echo '<VirtualHost *:80>\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
     </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Script de démarrage pour adapter le port d'Apache
-COPY docker/render-start.sh /usr/local/bin/render-start
-RUN chmod +x /usr/local/bin/render-start
-
 # Utilisateur www-data pour les permissions
 RUN chown -R www-data:www-data /var/www/html/var
 
-# Commande de démarrage qui adapte le port si nécessaire
-CMD ["/usr/local/bin/render-start"]
+# Le Procfile de Render va remplacer cette commande
+CMD ["apache2-foreground"]

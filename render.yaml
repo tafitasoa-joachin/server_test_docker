@@ -8,5 +8,5 @@ services:
         value: mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0
       - key: APP_ENV
         value: prod
-    # Nous n'utilisons pas de commandes personnalisées pour le build ou le démarrage
-    # puisque tout est géré dans le Dockerfile et le script start.sh
+      - key: APP_SECRET
+        generateValue: true

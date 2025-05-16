@@ -1,42 +1,34 @@
-FROM php:8.2-fpm-alpine
 
-# Installation des dépendances nécessaires
-RUN apk add --no-cache \
+FROM php:8.2-apache
+
+# Installer les dépendances et extensions PHP
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    libicu-dev \
     libzip-dev \
-    icu-dev \
     libpng-dev \
-    oniguruma-dev \
     libxml2-dev \
-    nginx \
-    bash \
-    net-tools \
-    curl
-
-# Installation des extensions PHP
-RUN docker-php-ext-install \
+    && docker-php-ext-install \
     pdo_mysql \
     intl \
     zip \
     opcache \
     gd \
     mbstring \
-    exif \
-    pcntl \
     bcmath \
-    xml
+    xml \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Définir le répertoire de travail
-WORKDIR /var/www/symfony
-
-# Autoriser Composer à s'exécuter en tant que root
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copier les fichiers du projet
+# Configuration du répertoire de travail
+WORKDIR /var/www/html
+
+# Copie du code source
 COPY . .
 
 # Installation des dépendances
@@ -44,39 +36,30 @@ RUN composer install --optimize-autoloader --no-dev
 
 # Configuration de l'environnement
 ENV APP_ENV=prod
-ENV APP_DEBUG=0
 
-# Optimisation pour la production
+# Optimisations pour la production
 RUN php bin/console cache:clear --env=prod \
     && php bin/console cache:warmup --env=prod \
     && php bin/console assets:install public --env=prod
 
-# Créer les répertoires nécessaires
-RUN mkdir -p /var/log/nginx \
-    && mkdir -p /run/nginx \
-    && mkdir -p /var/www/symfony/var/cache \
-    && mkdir -p /var/www/symfony/var/log
+# Configuration d'Apache pour Symfony
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+    FallbackResource /index.php\n\
+    </Directory>\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+    </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Créer des répertoires pour Nginx Alpine
-RUN mkdir -p /etc/nginx/http.d
+# Script de démarrage pour adapter le port d'Apache
+COPY docker/render-start.sh /usr/local/bin/render-start
+RUN chmod +x /usr/local/bin/render-start
 
-# S'assurer que les permissions sont correctes
-RUN chown -R www-data:www-data /var/www/symfony/var
-RUN chmod -R 755 /var/www/symfony/var
+# Utilisateur www-data pour les permissions
+RUN chown -R www-data:www-data /var/www/html/var
 
-# Copier le script de démarrage et le rendre exécutable
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-# Configuration de base pour Nginx
-RUN echo 'user nginx;' > /etc/nginx/nginx.conf \
-    && echo 'worker_processes auto;' >> /etc/nginx/nginx.conf \
-    && echo 'pid /run/nginx.pid;' >> /etc/nginx/nginx.conf \
-    && echo 'error_log /dev/stdout info;' >> /etc/nginx/nginx.conf \
-    && echo 'events { worker_connections 1024; }' >> /etc/nginx/nginx.conf \
-    && echo 'http { include /etc/nginx/http.d/*.conf; }' >> /etc/nginx/nginx.conf
-
-# IMPORTANT: On laisse Render injecter son propre port avec la variable PORT
-
-# Commande de démarrage
-CMD ["/start.sh"]
+# Commande de démarrage qui adapte le port si nécessaire
+CMD ["/usr/local/bin/render-start"]

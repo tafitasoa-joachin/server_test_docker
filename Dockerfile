@@ -72,8 +72,8 @@ RUN echo '<VirtualHost *:80>\n\
     </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Préparation pour Render
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY start.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start.sh
 
 # Expose port 80
 EXPOSE 80

@@ -1,32 +1,64 @@
 #!/bin/sh
+set -e
 
 # Afficher des informations de débogage
-echo "Démarrage de l'application..."
-echo "Variable PORT définie : $PORT"
+echo "=============== DÉMARRAGE DE L'APPLICATION ==============="
+echo "PORT défini par Render: $PORT"
 
-# Création des répertoires nécessaires s'ils n'existent pas
-mkdir -p /var/log/nginx
-touch /var/log/nginx/access.log /var/log/nginx/error.log
-
-# Ajustement du port Nginx selon la variable d'environnement de Render
-if [ ! -z "$PORT" ]; then
-  echo "Configuration du port Nginx sur $PORT"
-  # Modifier la configuration nginx.conf au lieu de default.conf
-  sed -i "s/listen 80/listen $PORT/g" /etc/nginx/nginx.conf
+# Si le PORT n'est pas défini, utiliser 10000 par défaut (valeur souvent utilisée par Render)
+if [ -z "$PORT" ]; then
+    PORT=10000
+    echo "PORT non défini, utilisation du port par défaut: $PORT"
 fi
 
-# Vérifier que la configuration a bien été appliquée
-echo "Configuration Nginx actuelle :"
-cat /etc/nginx/nginx.conf
+# Créer un fichier de configuration Nginx spécifique
+cat > /etc/nginx/http.d/default.conf << EOF
+server {
+    listen $PORT default_server;
+    server_name _;
+    root /var/www/symfony/public;
 
-# Démarrage de PHP-FPM en arrière-plan
+    location / {
+        try_files \$uri /index.php\$is_args\$args;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT \$document_root;
+        internal;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+
+    error_log /dev/stdout info;
+    access_log /dev/stdout;
+}
+EOF
+
+echo "Configuration Nginx générée avec le port $PORT :"
+cat /etc/nginx/http.d/default.conf
+
+echo "=============== DÉMARRAGE DES SERVICES ==============="
+
+# Démarrer PHP-FPM en arrière-plan
 echo "Démarrage de PHP-FPM..."
 php-fpm -D
 
-# Vérifier que PHP-FPM est bien démarré
+# Vérifier que PHP-FPM est en cours d'exécution
 sleep 2
-ps aux | grep php-fpm
+if pgrep -x "php-fpm" > /dev/null; then
+    echo "PHP-FPM démarré avec succès."
+else
+    echo "ERREUR: PHP-FPM n'a pas démarré correctement."
+    exit 1
+fi
 
-# Démarrage de Nginx en premier plan pour garder le conteneur actif
-echo "Démarrage de Nginx..."
+# Démarrer Nginx en premier plan
+echo "Démarrage de Nginx sur le port $PORT..."
+mkdir -p /run/nginx
 nginx -g "daemon off;"

@@ -1,4 +1,3 @@
-
 FROM php:8.2-fpm-alpine
 
 # Installation des dépendances nécessaires
@@ -11,9 +10,9 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     nginx \
-    supervisor \
     bash \
-    net-tools
+    net-tools \
+    curl
 
 # Installation des extensions PHP
 RUN docker-php-ext-install \
@@ -52,29 +51,32 @@ RUN php bin/console cache:clear --env=prod \
     && php bin/console cache:warmup --env=prod \
     && php bin/console assets:install public --env=prod
 
-# Création des répertoires nécessaires
-RUN mkdir -p /var/log/nginx && \
-    mkdir -p /var/log/supervisor && \
-    mkdir -p /run/nginx && \
-    mkdir -p /var/www/symfony/var/cache && \
-    mkdir -p /var/www/symfony/var/log
+# Créer les répertoires nécessaires
+RUN mkdir -p /var/log/nginx \
+    && mkdir -p /run/nginx \
+    && mkdir -p /var/www/symfony/var/cache \
+    && mkdir -p /var/www/symfony/var/log
 
-# Configuration pour Nginx
-COPY docker/render/nginx.conf /etc/nginx/nginx.conf
-
-# Configuration de Supervisor
-COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+# Créer des répertoires pour Nginx Alpine
+RUN mkdir -p /etc/nginx/http.d
 
 # S'assurer que les permissions sont correctes
 RUN chown -R www-data:www-data /var/www/symfony/var
 RUN chmod -R 755 /var/www/symfony/var
 
-# Copier les scripts de démarrage et les rendre exécutables
+# Copier le script de démarrage et le rendre exécutable
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# IMPORTANT: Ne pas définir EXPOSE car Render injecte son propre port
-# Le conteneur doit écouter sur la variable d'environnement $PORT fournie par Render
+# Configuration de base pour Nginx
+RUN echo 'user nginx;' > /etc/nginx/nginx.conf \
+    && echo 'worker_processes auto;' >> /etc/nginx/nginx.conf \
+    && echo 'pid /run/nginx.pid;' >> /etc/nginx/nginx.conf \
+    && echo 'error_log /dev/stdout info;' >> /etc/nginx/nginx.conf \
+    && echo 'events { worker_connections 1024; }' >> /etc/nginx/nginx.conf \
+    && echo 'http { include /etc/nginx/http.d/*.conf; }' >> /etc/nginx/nginx.conf
 
-# Utiliser start.sh comme point d'entrée
+# IMPORTANT: On laisse Render injecter son propre port avec la variable PORT
+
+# Commande de démarrage
 CMD ["/start.sh"]

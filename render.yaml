@@ -8,10 +8,5 @@ services:
         value: mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0
       - key: APP_ENV
         value: prod
-      - key: APP_SECRET
-        generateValue: true
-    healthCheckPath: /
-    # Pas besoin de spécifier les ports, Render utilise la variable d'environnement PORT
-    # automatiquement et votre start.sh s'en charge
-    buildCommand: echo "Docker build will handle the installation"
-    startCommand: /start.sh
+    # Nous n'utilisons pas de commandes personnalisées pour le build ou le démarrage
+    # puisque tout est géré dans le Dockerfile et le script start.sh

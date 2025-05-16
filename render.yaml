@@ -7,7 +7,7 @@ services:
       - DATABASE_URL=mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0
       - APP_ENV=prod
     ports:
-      - "80:80"
+      - "8080:80"
     # Ces volumes sont utiles pour le développement local mais ne sont pas nécessaires sur Render
     # volumes:
     #   - ./:/var/www/symfony

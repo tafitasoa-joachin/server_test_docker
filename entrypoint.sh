@@ -2,6 +2,10 @@
 #
 # startup script for Render
 #
+# Ajustement du port Nginx selon la variable d'environnement de Render
+if [ ! -z "$PORT" ]; then
+  sed -i "s/listen 80/listen $PORT/g" /etc/nginx/http.d/default.conf
+fi
 
 # Si un fichier render.yaml existe, on est sur Render
 if [ -f "/etc/render/config.yaml" ]; then

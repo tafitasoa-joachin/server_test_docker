@@ -50,18 +50,17 @@ WORKDIR /var/www/html
 # Copie du code source
 COPY . .
 
-# Installation des dépendances
-RUN composer install --prefer-dist --optimize-autoloader --no-dev \
-    && composer dump-autoload --optimize --no-dev --classmap-authoritative
+# Installation des dépendances - MODIFICATION ICI
+# D'abord installer avec les dépendances de dev pour la configuration initiale
+RUN composer install --prefer-dist --optimize-autoloader \
+    && APP_ENV=prod php bin/console cache:clear \
+    && APP_ENV=prod php bin/console cache:warmup \
+    && APP_ENV=prod php bin/console assets:install public \
+    && composer dump-autoload --optimize --classmap-authoritative \
+    && chown -R www-data:www-data var/
 
 # Configuration de l'environnement
 ENV APP_ENV=prod
-
-# Optimisations pour la production
-RUN php bin/console cache:clear --env=prod \
-    && php bin/console cache:warmup --env=prod \
-    && php bin/console assets:install public --env=prod \
-    && chown -R www-data:www-data var/
 
 # Configuration d'Apache pour Symfony avec des performances optimisées
 RUN echo '<VirtualHost *:80>\n\

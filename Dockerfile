@@ -46,6 +46,10 @@ WORKDIR /var/www/html
 # Copie du code source
 COPY . .
 
+RUN if [ "$APP_ENV" = "prod" ]; then \
+    cp config/bundles.prod.php config/bundles.php; \
+    fi
+
 # Installation des dépendances
 RUN composer install --optimize-autoloader --no-dev
 

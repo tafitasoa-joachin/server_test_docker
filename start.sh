@@ -1,30 +1,32 @@
 #!/bin/sh
 
+# Afficher des informations de débogage
+echo "Démarrage de l'application..."
+echo "Variable PORT définie : $PORT"
+
+# Création des répertoires nécessaires s'ils n'existent pas
+mkdir -p /var/log/nginx
+touch /var/log/nginx/access.log /var/log/nginx/error.log
+
 # Ajustement du port Nginx selon la variable d'environnement de Render
 if [ ! -z "$PORT" ]; then
-  sed -i "s/listen 80/listen $PORT/g" /etc/nginx/http.d/default.conf
+  echo "Configuration du port Nginx sur $PORT"
+  # Modifier la configuration nginx.conf au lieu de default.conf
+  sed -i "s/listen 80/listen $PORT/g" /etc/nginx/nginx.conf
 fi
 
-# S'assurer que les répertoires de log existent
-mkdir -p /var/log/nginx
-touch /var/log/nginx/project_error.log /var/log/nginx/project_access.log
-
-# Correction de la configuration fastcgi
-sed -i "s/fastcgi_pass php:9000/fastcgi_pass 127.0.0.1:9000/g" /etc/nginx/http.d/default.conf
-
-# Copie du fichier autoload si nécessaire (pour Symfony 7)
-if [ -f /var/www/project/vendor/autoload.php ] && [ ! -f /var/www/project/vendor/autoload_runtime.php ]; then
-    cp /var/www/project/vendor/autoload.php /var/www/project/vendor/autoload_runtime.php
-elif [ -f /var/www/project/vendor/symfony/runtime/autoload_runtime.php ] && [ ! -f /var/www/project/vendor/autoload_runtime.php ]; then
-    mkdir -p $(dirname /var/www/project/vendor/autoload_runtime.php)
-    cp /var/www/project/vendor/symfony/runtime/autoload_runtime.php /var/www/project/vendor/autoload_runtime.php
-fi
-
-# debogage en ligne
-php bin/console debug:router --env=prod
+# Vérifier que la configuration a bien été appliquée
+echo "Configuration Nginx actuelle :"
+cat /etc/nginx/nginx.conf
 
 # Démarrage de PHP-FPM en arrière-plan
+echo "Démarrage de PHP-FPM..."
 php-fpm -D
 
-# Démarrage de Nginx en premier plan
+# Vérifier que PHP-FPM est bien démarré
+sleep 2
+ps aux | grep php-fpm
+
+# Démarrage de Nginx en premier plan pour garder le conteneur actif
+echo "Démarrage de Nginx..."
 nginx -g "daemon off;"

@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 
@@ -10,11 +9,14 @@ if [ -n "$PORT" ]; then
     echo "Apache configured to listen on port $PORT"
 fi
 
-# Afficher la configuration pour vérification
+# Vérification des ports configurés
 echo "Apache ports.conf:"
 cat /etc/apache2/ports.conf
 echo "VirtualHost configuration:"
 cat /etc/apache2/sites-available/000-default.conf
+
+# Appliquer les permissions correctes
+chown -R www-data:www-data /var/www/html/var
 
 # Démarrer Apache en premier plan
 echo "Starting Apache..."

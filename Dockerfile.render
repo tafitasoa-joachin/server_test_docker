@@ -43,15 +43,6 @@ COPY . .
 # Installation des dépendances
 RUN composer install --optimize-autoloader --no-dev
 
-# Configuration de l'environnement
-ENV APP_ENV=prod
-ENV APP_DEBUG=0
-
-# Optimisation pour la production
-RUN php bin/console cache:clear --env=prod \
-    && php bin/console cache:warmup --env=prod \
-    && php bin/console assets:install public --env=prod
-
 # Création des répertoires nécessaires
 RUN mkdir -p /var/log/nginx && \
     mkdir -p /var/log/supervisor && \
@@ -59,29 +50,20 @@ RUN mkdir -p /var/log/nginx && \
     mkdir -p /var/www/symfony/var/cache && \
     mkdir -p /var/www/symfony/var/log
 
-# Configuration pour Nginx
-COPY docker/render/nginx.conf /etc/nginx/nginx.conf
-
-# Configuration de Supervisor
-COPY docker/render/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+# S'assurer que les permissions sont correctes
+RUN chown -R www-data:www-data /var/www/symfony/var
+RUN chmod -R 755 /var/www/symfony/var
 
 # Script de déploiement
 COPY deploy.sh /deploy.sh
 RUN chmod +x /deploy.sh
 
-# S'assurer que les permissions sont correctes
-RUN chown -R www-data:www-data /var/www/symfony/var
-RUN chmod -R 755 /var/www/symfony/var
-
 # Copier le script entrypoint et le rendre exécutable
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Exposition du port principal - sera remplacé par PORT sur Render
-EXPOSE 80
+# Exposer explicitement le port 10000 (sera remplacé par $PORT sur Render)
+EXPOSE 10000
 
 # Utiliser entrypoint.sh comme point d'entrée
 ENTRYPOINT ["/entrypoint.sh"]
-
-# La commande supervisord sera exécutée dans entrypoint.sh
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -76,5 +76,6 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 80
 
 # Utiliser entrypoint.sh comme point d'entrée
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php-fpm"]
+# ENTRYPOINT ["/entrypoint.sh"]
+# CMD ["php-fpm", "/start.sh"]
+CMD ["/start.sh"]

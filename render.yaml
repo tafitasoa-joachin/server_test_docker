@@ -6,13 +6,9 @@ services:
     environment:
       - DATABASE_URL=mysql://ue8t5vjaz1rhvrkj:sMaDfFPkUjKaO4RdAndk@bztk5ekzudeux7v5tznc-mysql.services.clever-cloud.com:3306/bztk5ekzudeux7v5tznc?serverVersion=8.0
       - APP_ENV=prod
-    ports:
-      - "8080:80"
-    # Ces volumes sont utiles pour le développement local mais ne sont pas nécessaires sur Render
-    # volumes:
-    #   - ./:/var/www/symfony
+    # N'incluez pas la directive ports ici, Render configurera le port automatiquement
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost:$PORT/"]
       interval: 10s
       timeout: 5s
       retries: 3
